@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 
-const AddProductForm = ({ onClose, onSubmit }) => {
+const AddProductForm = ({ onClose, onSubmit, isEdit = false, initialData = null }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -24,6 +24,27 @@ const AddProductForm = ({ onClose, onSubmit }) => {
 
   const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
   const availableColors = ['Black', 'White', 'Gray', 'Navy', 'Red', 'Blue', 'Green', 'Yellow', 'Pink', 'Purple'];
+
+  // Populate form when editing
+  useEffect(() => {
+    if (isEdit && initialData) {
+      console.log('🔄 AddProductForm: Populating form with initial data:', initialData);
+      setFormData({
+        name: initialData.name || '',
+        description: initialData.description || '',
+        price: initialData.price || '',
+        images: initialData.images || [],
+        sizes: initialData.sizes || [],
+        colors: initialData.colors || [],
+        quantity: initialData.quantity || '',
+        sku: initialData.sku || initialData.productCode || '', // Handle both sku and productCode
+        material: initialData.material || '',
+        careInstructions: initialData.careInstructions || '',
+        isActive: initialData.isActive !== undefined ? initialData.isActive : true
+      });
+      console.log('✅ AddProductForm: Form populated for editing');
+    }
+  }, [isEdit, initialData]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -129,7 +150,9 @@ const AddProductForm = ({ onClose, onSubmit }) => {
         className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto"
       >
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Add New T-Shirt Product</h2>
+          <h2 className="text-2xl font-bold">
+            {isEdit ? 'Edit Product' : 'Add New T-Shirt Product'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full"
@@ -388,7 +411,7 @@ const AddProductForm = ({ onClose, onSubmit }) => {
               type="submit"
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
             >
-              Add Product
+              {isEdit ? 'Update Product' : 'Add Product'}
             </button>
           </div>
         </form>

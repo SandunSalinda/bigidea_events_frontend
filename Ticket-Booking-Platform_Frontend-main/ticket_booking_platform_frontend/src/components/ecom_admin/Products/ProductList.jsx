@@ -1,63 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, AlertTriangle } from 'lucide-react';
 import AddProductForm from './AddProductForm';
+import { productService } from '../../../services/ecom_admin/productService';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   useEffect(() => {
-    // Simulate loading products
     const loadProducts = async () => {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setProducts([
-          { 
-            _id: '1', 
-            name: 'Classic Cotton T-Shirt', 
-            sku: 'TS001', 
-            description: 'A comfortable cotton t-shirt perfect for everyday wear',
-            images: ['/images/products/tshirt1.jpg'],
-            price: 29.99,
-            quantity: 100,
-            sizes: ['S', 'M', 'L', 'XL'],
-            colors: ['Black', 'White', 'Gray'],
-            material: '100% Cotton',
-            isActive: true
-          },
-          { 
-            _id: '2', 
-            name: 'Premium Organic T-Shirt', 
-            sku: 'TS002', 
-            description: 'Eco-friendly organic cotton t-shirt with superior comfort',
-            images: ['/images/products/tshirt2.jpg'],
-            price: 39.99,
-            quantity: 75,
-            sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-            colors: ['Navy', 'Green', 'White'],
-            material: '100% Organic Cotton',
-            isActive: true
-          },
-          { 
-            _id: '3', 
-            name: 'Vintage Style T-Shirt', 
-            sku: 'TS003', 
-            description: 'Retro-inspired t-shirt with a vintage washed finish',
-            images: ['/images/products/tshirt3.png'],
-            price: 34.99,
-            quantity: 50,
-            sizes: ['S', 'M', 'L', 'XL'],
-            colors: ['Gray', 'Blue', 'Red'],
-            material: '80% Cotton, 20% Polyester',
-            isActive: true
-          },
-        ]);
+      try {
+        console.log('🔄 Loading products from backend...');
+        const result = await productService.getAllProducts();
+        
+        if (result.success) {
+          console.log('✅ Products loaded:', result.data);
+          setProducts(result.data || []);
+        } else {
+          console.error('❌ Failed to load products:', result.error);
+          // Fallback to empty array if backend fails
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error('❌ Error loading products:', error);
+        setProducts([]);
+      } finally {
         setIsLoading(false);
-      }, 1000);
+      }
     };
 
     loadProducts();
@@ -68,21 +43,85 @@ const ProductList = () => {
     product.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddProduct = (productData) => {
-    // Here you would typically make an API call to save the product
-    console.log('Adding product:', productData);
-    
-    // For demo, add to the local state
-    const newProduct = {
-      _id: Date.now().toString(),
-      ...productData
-    };
-    
-    setProducts(prev => [newProduct, ...prev]);
-    setShowAddForm(false);
-    
-    // You can show a success toast here
-    alert('Product added successfully!');
+  const handleAddProduct = async (productData) => {
+    try {
+      console.log('🚀 Adding product:', productData);
+      
+      const result = await productService.createProduct(productData);
+      
+      if (result.success) {
+        console.log('✅ Product added successfully:', result.data);
+        
+        // Refresh the products list
+        const refreshResult = await productService.getAllProducts();
+        if (refreshResult.success) {
+          setProducts(refreshResult.data || []);
+        }
+        
+        setShowAddForm(false);
+        alert(`✅ ${result.message || 'Product added successfully!'}`);
+      } else {
+        console.error('❌ Failed to add product:', result.error);
+        alert(`❌ Failed to add product: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('❌ Error adding product:', error);
+      alert(`❌ Error adding product: ${error.message}`);
+    }
+  };
+
+  const handleEditProduct = async (productData) => {
+    try {
+      console.log('✏️ Updating product:', editingProduct._id, productData);
+      
+      const result = await productService.updateProduct(editingProduct._id, productData);
+      
+      if (result.success) {
+        console.log('✅ Product updated successfully:', result.data);
+        
+        // Refresh the products list
+        const refreshResult = await productService.getAllProducts();
+        if (refreshResult.success) {
+          setProducts(refreshResult.data || []);
+        }
+        
+        setEditingProduct(null);
+        alert(`✅ Product updated successfully!`);
+      } else {
+        console.error('❌ Failed to update product:', result.error);
+        alert(`❌ Failed to update product: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('❌ Error updating product:', error);
+      alert(`❌ Error updating product: ${error.message}`);
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    try {
+      console.log('🗑️ Deleting product:', productId);
+      
+      const result = await productService.deleteProduct(productId);
+      
+      if (result.success) {
+        console.log('✅ Product moved to recycle bin successfully');
+        
+        // Refresh the products list
+        const refreshResult = await productService.getAllProducts();
+        if (refreshResult.success) {
+          setProducts(refreshResult.data || []);
+        }
+        
+        setShowDeleteConfirm(null);
+        alert(`✅ Product moved to recycle bin successfully!`);
+      } else {
+        console.error('❌ Failed to delete product:', result.error);
+        alert(`❌ Failed to delete product: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('❌ Error deleting product:', error);
+      alert(`❌ Error deleting product: ${error.message}`);
+    }
   };
 
   if (isLoading) {
@@ -175,11 +214,17 @@ const ProductList = () => {
               </div>
 
               <div className="flex gap-2">
-                <button className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center justify-center gap-1">
+                <button 
+                  onClick={() => setEditingProduct(product)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center justify-center gap-1"
+                >
                   <Edit size={16} />
                   Edit
                 </button>
-                <button className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded text-sm hover:bg-red-200 flex items-center justify-center gap-1">
+                <button 
+                  onClick={() => setShowDeleteConfirm(product)}
+                  className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded text-sm hover:bg-red-200 flex items-center justify-center gap-1"
+                >
                   <Trash2 size={16} />
                   Delete
                 </button>
@@ -202,6 +247,62 @@ const ProductList = () => {
           onClose={() => setShowAddForm(false)}
           onSubmit={handleAddProduct}
         />
+      )}
+
+      {/* Edit Product Form */}
+      {editingProduct && (
+        <AddProductForm
+          isEdit={true}
+          initialData={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSubmit={handleEditProduct}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg p-6 w-full max-w-md mx-4"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Product</h3>
+                <p className="text-sm text-gray-600">This action will move the product to recycle bin</p>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h4 className="font-medium text-gray-900">{showDeleteConfirm.name}</h4>
+              <p className="text-sm text-gray-600">SKU: {showDeleteConfirm.sku}</p>
+              <p className="text-sm text-gray-600">Price: ${showDeleteConfirm.price}</p>
+            </div>
+
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete this product? It will be moved to the recycle bin and can be recovered later if needed.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(showDeleteConfirm._id)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Move to Recycle Bin
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );

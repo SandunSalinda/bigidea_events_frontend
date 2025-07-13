@@ -19,32 +19,47 @@ const Shop = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.log('🛍️ Shop: Starting to fetch products...');
         setLoading(true);
+        setError(null);
+        
         const result = await productService.getAllProducts();
+        console.log('🛍️ Shop: Product service result:', result);
+        
         if (result.success) {
+          console.log('🛍️ Shop: Raw products data:', result.data);
+          
           // Transform data to match the expected format for ProductCard
-          const transformedProducts = result.data.map(product => ({
-            id: product._id,
-            name: product.name,
-            price: product.price,
-            image: product.images?.[0] || '/images/products/default.jpg',
-            category: 'tshirt', // Since you mentioned it's t-shirts only
-            rating: 4.5, // Default rating
-            sizes: product.sizes || ['S', 'M', 'L', 'XL'],
-            colors: product.colors || [],
-            description: product.description,
-            sku: product.sku,
-            isActive: product.isActive
-          }));
+          const transformedProducts = result.data.map(product => {
+            console.log('🛍️ Shop: Transforming product:', product);
+            return {
+              id: product._id,
+              name: product.name,
+              price: product.price || 0, // Default price
+              image: product.images?.[0] || '/images/products/default.jpg',
+              category: 'tshirt', // Since you mentioned it's t-shirts only
+              rating: 4.5, // Default rating
+              sizes: product.sizes || ['S', 'M', 'L', 'XL'],
+              colors: product.colors || [],
+              description: product.description,
+              sku: product.sku,
+              isActive: product.isActive !== false // Default to true if not specified
+            };
+          });
+          
+          console.log('🛍️ Shop: Transformed products:', transformedProducts);
           setProducts(transformedProducts);
+          console.log('🛍️ Shop: Products set successfully');
         } else {
+          console.error('❌ Shop: Product fetch failed:', result.error);
           setError(result.error || 'Failed to fetch products');
         }
       } catch (err) {
-        setError('Failed to fetch products');
-        console.error('Error fetching products:', err);
+        console.error('❌ Shop: Error in fetchProducts:', err);
+        setError('Failed to fetch products: ' + err.message);
       } finally {
         setLoading(false);
+        console.log('🛍️ Shop: Loading finished');
       }
     };
 
