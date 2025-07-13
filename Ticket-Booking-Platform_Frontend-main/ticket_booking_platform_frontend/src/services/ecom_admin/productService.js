@@ -1,19 +1,30 @@
 // Product Service - Ready for backend integration
+import { categoryService } from './categoryService.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_ECOM_API_URL || 'http://localhost:3000/api/ecom';
 
 // Get authentication token
 const getAuthToken = () => {
   return localStorage.getItem('ecom_token');
 };
 
-// Create headers with authentication
+// Create headers with authentication (for JSON requests)
 const createHeaders = () => {
   const token = getAuthToken();
   return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` })
   };
+};
+
+// Create headers for FormData requests (no Content-Type)
+const createFormDataHeaders = () => {
+  const token = getAuthToken();
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
 };
 
 // Mock data for demonstration (remove when connecting to real backend)
@@ -52,26 +63,33 @@ export const productService = {
   // Get all products
   async getAllProducts() {
     try {
-      // Mock implementation - replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-      return { success: true, data: mockProducts };
-
-      // Real API implementation (uncomment when backend is ready):
-      /*
+      // Real API implementation:
       const response = await fetch(`${API_BASE_URL}/products`, {
         method: 'GET',
         headers: createHeaders()
       });
 
       if (!response.ok) {
+        // If unauthorized, might need to re-authenticate
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please login again.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      return { success: true, data: data.products || data };
-      */
+      return { success: true, data: data.data || [] };
     } catch (error) {
       console.error('Error fetching products:', error);
+      
+      // If there's a network error, provide fallback
+      if (error.message.includes('fetch')) {
+        return { 
+          success: false, 
+          error: 'Unable to connect to server. Please check if backend is running.' 
+        };
+      }
+      
       return { success: false, error: error.message };
     }
   },
@@ -110,34 +128,103 @@ export const productService = {
   // Create new product
   async createProduct(productData) {
     try {
-      // Mock implementation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const newProduct = {
-        _id: Date.now().toString(),
-        ...productData,
-        createdAt: new Date().toISOString()
-      };
-      mockProducts.unshift(newProduct);
-      return { success: true, data: newProduct };
+      console.log('🚀 Starting product creation process...');
+      
+      // Step 1: Ensure we have a category for T-shirts
+      console.log('📁 Checking/creating category...');
+      const categoryResult = await categoryService.ensureDefaultCategory();
+      if (!categoryResult.success) {
+        throw new Error('Failed to get category: ' + categoryResult.error);
+      }
+      
+      const category = categoryResult.data;
+      console.log('✅ Using category:', category.name, '(ID:', category._id, ')');
 
-      // Real API implementation:
-      /*
+      // Step 2: Validate required fields
+      if (!productData.name || !productData.description) {
+        throw new Error('Product name and description are required');
+      }
+
+      // Step 3: Prepare FormData (backend expects FormData, not JSON)
+      const formData = new FormData();
+      
+      // Add required text fields
+      formData.append('name', productData.name);
+      formData.append('description', productData.description);
+      formData.append('category', category._id); // Use category ObjectId
+      
+      // Add optional fields if provided
+      if (productData.productCode) {
+        formData.append('productCode', productData.productCode);
+      }
+      
+      // Handle images if provided
+      if (productData.images && productData.images.length > 0) {
+        console.log(`📷 Adding ${productData.images.length} images...`);
+        for (let i = 0; i < productData.images.length; i++) {
+          const image = productData.images[i];
+          if (image instanceof File) {
+            formData.append('images', image);
+            console.log(`   - Image ${i + 1}: ${image.name} (${(image.size / 1024).toFixed(1)}KB)`);
+          }
+        }
+      }
+
+      // Log FormData contents for debugging
+      console.log('📤 FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`   ${key}: [File] ${value.name}`);
+        } else {
+          console.log(`   ${key}: ${value}`);
+        }
+      }
+
+      // Step 4: Send request using FormData
+      console.log('🌐 Sending request to backend...');
       const response = await fetch(`${API_BASE_URL}/products`, {
         method: 'POST',
-        headers: createHeaders(),
-        body: JSON.stringify(productData)
+        headers: createFormDataHeaders(), // Don't set Content-Type for FormData
+        body: formData
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create product');
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please login again.');
+        }
+        
+        let errorMessage = `Failed to create product (HTTP ${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error('❌ Backend error:', errorData);
+        } catch (e) {
+          console.error('❌ Could not parse error response');
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      return { success: true, data: data.product || data };
-      */
+      console.log('✅ Product created successfully:', data);
+      
+      return { 
+        success: true, 
+        data: data.data || data,
+        message: `Product "${productData.name}" created successfully!`
+      };
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('❌ Error creating product:', error);
+      
+      if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
+        return { 
+          success: false, 
+          error: 'Unable to connect to server. Please check if the backend is running at http://localhost:3000'
+        };
+      }
+      
       return { success: false, error: error.message };
     }
   },
@@ -214,7 +301,7 @@ export const productService = {
       // Mock implementation
       await new Promise(resolve => setTimeout(resolve, 1500));
       const uploadedUrls = files.map((file, index) => 
-        `/images/products/uploaded_${Date.now()}_${index}.jpg`
+        `/uploads/ecom/uploaded_${Date.now()}_${index}.jpg`
       );
       return { success: true, data: uploadedUrls };
 

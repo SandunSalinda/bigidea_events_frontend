@@ -25,6 +25,25 @@ export const productImages = {
 
 export const getProductImage = (imageName) => {
   if (!imageName) return defaultImage;
+  
+  // Check if it's already a full URL from backend
+  if (imageName.startsWith('http://localhost:3000/uploads/ecom/')) {
+    return imageName;
+  }
+  
+  // Check if it's a backend upload path
+  if (imageName.startsWith('/uploads/ecom/') || imageName.includes('uploads/ecom/')) {
+    // Extract filename and construct full URL
+    const filename = imageName.split('/').pop();
+    return `http://localhost:3000/uploads/ecom/${filename}`;
+  }
+  
+  // Check if it's any other absolute path
+  if (imageName.startsWith('http') || imageName.startsWith('/')) {
+    return imageName;
+  }
+  
+  // For backwards compatibility with static images
   return productImages[imageName] || defaultImage;
 };
 

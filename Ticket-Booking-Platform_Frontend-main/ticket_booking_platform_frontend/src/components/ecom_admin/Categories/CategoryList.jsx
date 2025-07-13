@@ -1,34 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Edit, Trash2, Grid } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Grid, RefreshCw, AlertCircle } from 'lucide-react';
+import { categoryService } from '../../../services/ecom_admin/categoryService.js';
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [error, setError] = useState('');
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  const loadCategories = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const result = await categoryService.getAllCategories();
+      if (result.success) {
+        setCategories(result.data || []);
+      } else {
+        setError(result.error || 'Failed to load categories');
+      }
+    } catch (error) {
+      setError('Failed to load categories: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const initializeCategories = async () => {
+    setIsInitializing(true);
+    try {
+      const result = await categoryService.initializeDefaultCategories();
+      if (result.success) {
+        await loadCategories(); // Reload categories
+        alert(result.message || 'Categories initialized successfully!');
+      } else {
+        alert('Failed to initialize categories: ' + result.error);
+      }
+    } catch (error) {
+      alert('Failed to initialize categories: ' + error.message);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate loading categories
-    const loadCategories = async () => {
-      setIsLoading(true);
-      setTimeout(() => {
-        setCategories([
-          { _id: '1', name: 'Clothing', description: 'Apparel and clothing items', productCount: 25 },
-          { _id: '2', name: 'Electronics', description: 'Electronic devices and gadgets', productCount: 18 },
-          { _id: '3', name: 'Accessories', description: 'Fashion accessories and jewelry', productCount: 12 },
-          { _id: '4', name: 'Home & Garden', description: 'Home decor and garden items', productCount: 8 },
-        ]);
-        setIsLoading(false);
-      }, 1000);
-    };
-
     loadCategories();
   }, []);
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase())
+    (category.description && category.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (isLoading) {
@@ -45,16 +68,47 @@ const CategoryList = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Categories Management</h1>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowAddForm(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
-        >
-          <Plus size={20} />
-          Add Category
-        </motion.button>
+        <div className="flex gap-2">
+          {categories.length === 0 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={initializeCategories}
+              disabled={isInitializing}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
+            >
+              {isInitializing ? <RefreshCw className="animate-spin" size={16} /> : <Plus size={16} />}
+              {isInitializing ? 'Initializing...' : 'Initialize Categories'}
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={loadCategories}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddForm(true)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
+          >
+            <Plus size={20} />
+            Add Category
+          </motion.button>
+        </div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+          <AlertCircle size={20} className="text-red-500" />
+          <span className="text-red-700">{error}</span>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="mb-6">
@@ -83,7 +137,7 @@ const CategoryList = () => {
               <div className="bg-indigo-100 p-3 rounded-full">
                 <Grid size={24} className="text-indigo-600" />
               </div>
-              <span className="text-sm text-gray-500">{category.productCount} products</span>
+              <span className="text-sm text-gray-500">{category.productCount || 0} products</span>
             </div>
             
             <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
@@ -103,10 +157,25 @@ const CategoryList = () => {
         ))}
       </div>
 
+      {/* Empty State */}
       {filteredCategories.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <Grid size={48} className="mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-500">No categories found</p>
+          <p className="text-gray-500 mb-4">
+            {categories.length === 0 ? 'No categories found. Create categories first before adding products.' : 'No categories match your search.'}
+          </p>
+          {categories.length === 0 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={initializeCategories}
+              disabled={isInitializing}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 flex items-center gap-2 mx-auto disabled:opacity-50"
+            >
+              {isInitializing ? <RefreshCw className="animate-spin" size={16} /> : <Plus size={16} />}
+              {isInitializing ? 'Initializing...' : 'Initialize Default Categories'}
+            </motion.button>
+          )}
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ProductCard from "../components/ecom_Components/cards/ProductCard";
 import ShopNav from "../components/ecom_Components/navigation/ShopNav";
 import Footer from "../components/Footer";
@@ -6,97 +6,55 @@ import CartSlider from "../components/ecom_Components/cart/CartSlider";
 import { getProductImage } from "../utils/images";
 import { heroBg, defaultImage } from "../utils/images";
 import { ToastContainer } from "react-toastify";
-
-const products = [
-  {
-    id: 1,
-    name: "Electronica Tee",
-    price: 18.99,
-    image: "tshirt1.jpg",
-    category: "men",
-    rating: 4.5,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 2,
-    name: "Classic Tee - White",
-    price: 14.99,
-    image: "tshirt2.jpg",
-    category: "women",
-    rating: 4.2,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 3,
-    name: "Moss Green - Earth",
-    price: 16.50,
-    image: "tshirt3.png",
-    category: "unisex",
-    rating: 4.7,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 4,
-    name: "Transmission Tee",
-    price: 19.99,
-    image: "tshirt4.png",
-    category: "unisex",
-    rating: 4.8,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 5,
-    name: "Coast Tee",
-    price: 15.75,
-    image: "tshirt5.jpg",
-    category: "unisex",
-    rating: 4.3,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 6,
-    name: "Culture Tree",
-    price: 17.25,
-    image: "tshirt6.jpg",
-    category: "unisex",
-    rating: 4.6,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 7,
-    name: "Down Beat tee",
-    price: 17.00,
-    image: "tshirt7.jpg",
-    category: "unisex",
-    rating: 4.6,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 8,
-    name: "living in stereo",
-    price: 20.00,
-    image: "tshirt8.png",
-    category: "unisex",
-    rating: 4.6,
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: 9,
-    name: "Studio tee",
-    price: 15.00,
-    image: "tshirt9.png",
-    category: "unisex",
-    rating: 4.6,
-    sizes: ["S", "M", "L", "XL"]
-  }
-];
+import { productService } from "../services/ecom_admin/productService";
 
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const productsSectionRef = useRef(null);
+
+  // Fetch products when component mounts
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const result = await productService.getAllProducts();
+        if (result.success) {
+          // Transform data to match the expected format for ProductCard
+          const transformedProducts = result.data.map(product => ({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            image: product.images?.[0] || '/images/products/default.jpg',
+            category: 'tshirt', // Since you mentioned it's t-shirts only
+            rating: 4.5, // Default rating
+            sizes: product.sizes || ['S', 'M', 'L', 'XL'],
+            colors: product.colors || [],
+            description: product.description,
+            sku: product.sku,
+            isActive: product.isActive
+          }));
+          setProducts(transformedProducts);
+        } else {
+          setError(result.error || 'Failed to fetch products');
+        }
+      } catch (err) {
+        setError('Failed to fetch products');
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const filteredProducts = products.filter((product) => {
     if (!product || !product.name) return false;
+    // Only show active products
+    if (product.isActive === false) return false;
     const query = typeof searchQuery === 'string' ? searchQuery.toLowerCase() : '';
     const productName = product.name.toLowerCase();
     return productName.includes(query);
@@ -144,21 +102,36 @@ const Shop = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Our Products</h1>
           <p className="text-gray-600 mt-2">
-            {filteredProducts.length} products available
+            {loading ? 'Loading...' : `${filteredProducts.length} products available`}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              className="transform hover:-translate-y-1 transition-all duration-200"
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-medium text-red-500">
+              Error loading products
+            </h3>
+            <p className="text-gray-400 mt-2">
+              {error}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                className="transform hover:-translate-y-1 transition-all duration-200"
+              />
+            ))}
+          </div>
+        )}
 
-        {filteredProducts.length === 0 && (
+        {!loading && !error && filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <h3 className="text-xl font-medium text-gray-500">
               No products found

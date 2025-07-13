@@ -93,22 +93,31 @@ const AddProductForm = ({ onClose, onSubmit }) => {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.name || !formData.price || !formData.quantity) {
-      alert('Please fill in all required fields');
+    if (!formData.name || !formData.description) {
+      alert('Please fill in all required fields (Name and Description)');
       return;
     }
 
-    // Generate SKU if not provided
-    const sku = formData.sku || `TS-${Date.now()}`;
+    // Generate product code if not provided
+    const productCode = formData.sku || `TS-${Date.now()}`;
     
+    // Prepare product data with actual File objects for images
     const productData = {
-      ...formData,
-      sku,
-      price: parseFloat(formData.price),
-      quantity: parseInt(formData.quantity),
-      createdAt: new Date().toISOString()
+      name: formData.name,
+      description: formData.description,
+      productCode: productCode,
+      images: imageFiles.map(img => img.file), // Pass actual File objects
+      // Additional fields for future use (not required by backend for now)
+      price: formData.price ? parseFloat(formData.price) : undefined,
+      quantity: formData.quantity ? parseInt(formData.quantity) : undefined,
+      sizes: formData.sizes,
+      colors: formData.colors,
+      material: formData.material,
+      careInstructions: formData.careInstructions,
+      isActive: formData.isActive
     };
 
+    console.log('Submitting product data:', productData);
     onSubmit(productData);
   };
 
@@ -155,7 +164,7 @@ const AddProductForm = ({ onClose, onSubmit }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
+                      Description *
                     </label>
                     <textarea
                       name="description"
@@ -164,13 +173,14 @@ const AddProductForm = ({ onClose, onSubmit }) => {
                       rows="4"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Describe the t-shirt features, fit, and style..."
+                      required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Price * ($)
+                        Price ($)
                       </label>
                       <input
                         type="number"
@@ -181,13 +191,12 @@ const AddProductForm = ({ onClose, onSubmit }) => {
                         min="0"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="29.99"
-                        required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quantity *
+                        Quantity
                       </label>
                       <input
                         type="number"

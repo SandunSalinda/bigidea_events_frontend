@@ -53,7 +53,13 @@ src/components/ecom_admin/
 
 ### Context & Services
 - **Context**: `src/contexts/EcomAdminContext.jsx` - Manages authentication state
-- **Services**: `src/services/ecom_admin/authService.js` - API communication
+- **Services**: 
+  - `src/services/ecom_admin/authService.js` - Authentication API communication
+  - `src/services/ecom_admin/productService.js` - Product management API
+  - `src/services/ecom_admin/orderService.js` - Order management API
+  - `src/services/ecom_admin/customerService.js` - Customer management API
+  - `src/services/ecom_admin/stockService.js` - Stock/inventory management API
+  - `src/services/ecom_admin/dashboardService.js` - Dashboard statistics API
 
 ## Implementation Details
 
@@ -105,9 +111,13 @@ src/components/ecom_admin/
 ## API Integration Notes
 
 ### Environment Variables
-The system expects a `VITE_API_URL` environment variable for API calls. Currently using:
+The system uses a separate environment variable for e-commerce API calls:
 ```javascript
-fetch(`${import.meta.env.VITE_API_URL}/auth/signin`, {
+// .env file
+VITE_ECOM_API_URL=http://localhost:3000/api/ecom
+
+// Usage in code
+fetch(`${import.meta.env.VITE_ECOM_API_URL}/auth/signin`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email, password })
@@ -115,9 +125,20 @@ fetch(`${import.meta.env.VITE_API_URL}/auth/signin`, {
 ```
 
 ### Expected API Endpoints
-- `POST /auth/signin` - Authentication
-- `GET /auth/verify-token` - Token verification
-- Additional endpoints needed for products, categories, orders, etc.
+All endpoints are now prefixed with `/api/ecom/`:
+- `POST /api/ecom/auth/signin` - Authentication
+- `GET /api/ecom/auth/verify-token` - Token verification
+- `GET /api/ecom/products` - Get all products
+- `POST /api/ecom/products` - Create product
+- `GET /api/ecom/orders` - Get all orders
+- `GET /api/ecom/customers` - Get all customers
+- `GET /api/ecom/stocks` - Get stock levels
+- `GET /api/ecom/dashboard/stats` - Dashboard statistics
+
+### Image Upload Paths
+Product images are now stored in the `/uploads/ecom/` directory:
+- Upload endpoint: `/api/ecom/products/upload-images`
+- Image URLs: `/uploads/ecom/{filename}`
 
 ## Future Enhancements
 
@@ -143,9 +164,10 @@ fetch(`${import.meta.env.VITE_API_URL}/auth/signin`, {
 ## Troubleshooting
 
 ### Common Issues
-1. **Image Loading**: Update image paths to use `/images/` instead of `/public/images/`
-2. **Authentication**: Ensure VITE_API_URL is set correctly
+1. **Environment Variables**: Ensure `.env` file contains `VITE_ECOM_API_URL=http://localhost:3000/api/ecom`
+2. **Image Paths**: Product images use `/uploads/ecom/` prefix for the integrated backend
 3. **Route Conflicts**: E-commerce admin routes are prefixed with `/ecom_admin/`
+4. **API Endpoints**: All e-commerce API calls use `/api/ecom/` prefix
 
 ### Development
 - The system uses mock data for demonstration
