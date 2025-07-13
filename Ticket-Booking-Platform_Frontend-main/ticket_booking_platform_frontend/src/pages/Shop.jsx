@@ -36,6 +36,7 @@ const Shop = () => {
               id: product._id,
               name: product.name,
               price: product.price || 0, // Default price
+              quantity: product.quantity || 0, // Stock quantity for availability
               image: product.images?.[0] || '/images/products/default.jpg',
               category: 'tshirt', // Since you mentioned it's t-shirts only
               rating: 4.5, // Default rating

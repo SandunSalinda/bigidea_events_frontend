@@ -172,9 +172,30 @@ export const productService = {
       formData.append('description', productData.description);      // Required
       formData.append('category', categoryObjectId);                // Required (ObjectId)
       
-      // Optional fields
+      // E-commerce fields (Essential for shop functionality)
+      formData.append('price', productData.price || 0);             // Price (default to 0)
+      formData.append('quantity', productData.quantity || 0);       // Stock quantity (default to 0)
+      
+      // Product variants
+      if (productData.sizes && productData.sizes.length > 0) {
+        formData.append('sizes', JSON.stringify(productData.sizes)); // Array of sizes
+      }
+      if (productData.colors && productData.colors.length > 0) {
+        formData.append('colors', JSON.stringify(productData.colors)); // Array of colors
+      }
+      
+      // Additional optional fields
       if (productData.productCode) {
         formData.append('productCode', productData.productCode);
+      }
+      if (productData.material) {
+        formData.append('material', productData.material);
+      }
+      if (productData.careInstructions) {
+        formData.append('careInstructions', productData.careInstructions);
+      }
+      if (productData.isActive !== undefined) {
+        formData.append('isActive', productData.isActive);
       }
       
       // Handle images if provided (Optional)

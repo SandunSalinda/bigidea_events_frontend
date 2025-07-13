@@ -128,11 +128,11 @@ const AddProductForm = ({ onClose, onSubmit, isEdit = false, initialData = null 
       description: formData.description,
       productCode: productCode,
       images: imageFiles.map(img => img.file), // Pass actual File objects
-      // Additional fields for future use (not required by backend for now)
-      price: formData.price ? parseFloat(formData.price) : undefined,
-      quantity: formData.quantity ? parseInt(formData.quantity) : undefined,
-      sizes: formData.sizes,
-      colors: formData.colors,
+      // E-commerce fields (Essential for shop functionality)
+      price: formData.price ? parseFloat(formData.price) : 0,       // Default to 0
+      quantity: formData.quantity ? parseInt(formData.quantity) : 0, // Default to 0
+      sizes: formData.sizes,                                         // Array of sizes
+      colors: formData.colors,                                       // Array of colors
       material: formData.material,
       careInstructions: formData.careInstructions,
       isActive: formData.isActive

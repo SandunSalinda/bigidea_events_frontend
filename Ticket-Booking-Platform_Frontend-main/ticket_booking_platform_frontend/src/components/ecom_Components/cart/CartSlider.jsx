@@ -81,6 +81,11 @@ const CartSlider = () => {
                           <p className="text-sm text-gray-500">
                             Size: <span className="font-medium">{item.size || 'Not specified'}</span>
                           </p>
+                          {item.stockQuantity && (
+                            <p className="text-xs text-gray-400">
+                              {item.quantity >= item.stockQuantity ? 'Max quantity reached' : `${item.stockQuantity} available`}
+                            </p>
+                          )}
                         </div>
                         
                         <div className="mt-3 flex items-center justify-between">
@@ -95,8 +100,23 @@ const CartSlider = () => {
                               {item.quantity}
                             </span>
                             <button 
-                              onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
-                              className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                              onClick={() => {
+                                if (item.stockQuantity && item.quantity >= item.stockQuantity) {
+                                  toast.error(`Only ${item.stockQuantity} items available in stock`, {
+                                    position: "top-center",
+                                    autoClose: 2000,
+                                    style: { marginTop: '4rem' }
+                                  });
+                                  return;
+                                }
+                                updateQuantity(item.id, item.size, item.quantity + 1);
+                              }}
+                              disabled={item.stockQuantity && item.quantity >= item.stockQuantity}
+                              className={`px-3 py-1 transition-colors ${
+                                item.stockQuantity && item.quantity >= item.stockQuantity
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'hover:bg-gray-100'
+                              }`}
                             >
                               +
                             </button>

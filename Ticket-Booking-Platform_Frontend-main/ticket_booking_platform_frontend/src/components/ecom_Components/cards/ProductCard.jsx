@@ -10,6 +10,20 @@ const ProductCard = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState(null);
 
   const handleAddToCart = () => {
+    if (product.quantity <= 0) {
+      toast.error('Sorry, this item is out of stock', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      return;
+    }
+
     if (!selectedSize) {
       toast.error('Please select a size first', {
         position: "top-center",
@@ -23,7 +37,14 @@ const ProductCard = ({ product }) => {
       });
       return;
     }
-    addToCart({ ...product, size: selectedSize });
+    // Add only 1 item to cart with selected size
+    const cartItem = {
+      ...product,
+      size: selectedSize,
+      cartQuantity: 1  // Explicitly set cart quantity to 1
+    };
+    
+    addToCart(cartItem);
     toast.success('Added to cart!', {
       position: "top-right",
       autoClose: 2000,
@@ -56,6 +77,30 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
         
+        {/* Stock Indicator */}
+        <div className="mb-3">
+          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            product.quantity > 10 
+              ? 'bg-green-100 text-green-800' 
+              : product.quantity > 5 
+              ? 'bg-yellow-100 text-yellow-800' 
+              : product.quantity > 0 
+              ? 'bg-red-100 text-red-800' 
+              : 'bg-gray-100 text-gray-800'
+          }`}>
+            <div className={`w-2 h-2 rounded-full mr-1 ${
+              product.quantity > 10 
+                ? 'bg-green-400' 
+                : product.quantity > 5 
+                ? 'bg-yellow-400' 
+                : product.quantity > 0 
+                ? 'bg-red-400' 
+                : 'bg-gray-400'
+            }`}></div>
+            {product.quantity > 0 ? `${product.quantity} left` : 'Out of stock'}
+          </div>
+        </div>
+        
         <div className="mb-3">
           <span className="text-sm text-gray-500">Size:</span>
           <div className="flex space-x-2 mt-1">
@@ -84,9 +129,14 @@ const ProductCard = ({ product }) => {
           
           <button 
             onClick={handleAddToCart}
-            className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors duration-200"
+            disabled={product.quantity <= 0}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              product.quantity <= 0
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-black text-white hover:bg-gray-800'
+            }`}
           >
-            Add to Cart
+            {product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
           </button>
         </div>
       </div>
@@ -99,7 +149,8 @@ ProductCard.defaultProps = {
     name: "Electronica Tee",
     price: 18.99,
     image: "tshirt1.jpg",
-    sizes: ["S", "M", "L", "XL"]
+    sizes: ["S", "M", "L", "XL"],
+    quantity: 15
   }
 };
 

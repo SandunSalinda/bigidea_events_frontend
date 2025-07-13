@@ -186,25 +186,33 @@ const ProductList = () => {
             
             <div className="p-4">
               <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-              <p className="text-gray-600 text-sm mb-2">SKU: {product.sku}</p>
+              <p className="text-gray-600 text-sm mb-2">SKU: {product.productCode || product.sku || 'N/A'}</p>
               <p className="text-gray-500 text-sm mb-3 line-clamp-2">{product.description}</p>
               
               <div className="mb-3">
                 <div className="flex flex-wrap gap-1 mb-2">
                   <span className="text-xs text-gray-600">Sizes:</span>
-                  {product.sizes?.map(size => (
-                    <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                      {size}
-                    </span>
-                  ))}
+                  {product.sizes && product.sizes.length > 0 ? (
+                    product.sizes.map(size => (
+                      <span key={size} className="text-xs bg-blue-100 px-2 py-1 rounded">
+                        {size}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-400">No sizes specified</span>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-1">
                   <span className="text-xs text-gray-600">Colors:</span>
-                  {product.colors?.map(color => (
-                    <span key={color} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                      {color}
-                    </span>
-                  ))}
+                  {product.colors && product.colors.length > 0 ? (
+                    product.colors.map(color => (
+                      <span key={color} className="text-xs bg-green-100 px-2 py-1 rounded">
+                        {color}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-400">No colors specified</span>
+                  )}
                 </div>
               </div>
               
