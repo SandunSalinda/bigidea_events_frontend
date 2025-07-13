@@ -254,18 +254,41 @@ const CheckoutPage = () => {
     const initializeStripe = async () => {
       try {
         console.log('🔑 Initializing Stripe...');
+        
+        // Try to get config from backend first
         const configResult = await stripeService.getStripeConfig();
         
-        if (configResult.success) {
-          const stripe = await loadStripe(configResult.publishableKey);
-          setStripePromise(stripe);
-          console.log('✅ Stripe initialized successfully');
+        let publishableKey;
+        if (configResult.success && configResult.publishableKey) {
+          publishableKey = configResult.publishableKey;
+          console.log('✅ Got publishable key from backend:', publishableKey.substring(0, 20) + '...');
         } else {
-          throw new Error(configResult.error);
+          // Fallback to hardcoded key for testing (your friend provided this)
+          publishableKey = 'pk_test_51RflZsH8Y4NurIedtVJjjow0vcGgcSjiakk7ukq6V7ylUwk3aKIUiySY3h9COv0IBi3ISnoQSw1kF0pllVuxzTUg00YRySt0o2';
+          console.log('⚠️ Using fallback publishable key, backend config failed:', configResult.error);
+        }
+        
+        if (publishableKey) {
+          const stripe = await loadStripe(publishableKey);
+          setStripePromise(stripe);
+          console.log('✅ Stripe initialized successfully with key:', publishableKey.substring(0, 20) + '...');
+        } else {
+          throw new Error('No Stripe publishable key available');
         }
       } catch (error) {
         console.error('❌ Failed to initialize Stripe:', error);
-        toast.error('Failed to load payment system. Please refresh the page.');
+        
+        // Try with fallback key anyway
+        try {
+          console.log('🔄 Trying fallback Stripe key...');
+          const fallbackKey = 'pk_test_51RflZsH8Y4NurIedtVJjjow0vcGgcSjiakk7ukq6V7ylUwk3aKIUiySY3h9COv0IBi3ISnoQSw1kF0pllVuxzTUg00YRySt0o2';
+          const stripe = await loadStripe(fallbackKey);
+          setStripePromise(stripe);
+          console.log('✅ Stripe initialized with fallback key');
+        } catch (fallbackError) {
+          console.error('❌ Fallback Stripe initialization also failed:', fallbackError);
+          toast.error('Failed to load payment system. Please refresh the page.');
+        }
       } finally {
         setLoading(false);
       }
@@ -443,7 +466,15 @@ const CheckoutPage = () => {
             </div>
 
             {/* Payment Section */}
-            {stripePromise && (
+            {loading ? (
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4">Loading Payment System...</h3>
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-3">Initializing Stripe...</span>
+                </div>
+              </div>
+            ) : stripePromise ? (
               <Elements stripe={stripePromise}>
                 <PaymentForm 
                   customerInfo={getValues()}
@@ -454,6 +485,24 @@ const CheckoutPage = () => {
                   onValidateForm={validateForm}
                 />
               </Elements>
+            ) : (
+              <div className="bg-red-50 p-6 rounded-lg border border-red-200">
+                <h3 className="text-lg font-semibold mb-4 text-red-800">Payment System Error</h3>
+                <p className="text-red-700 mb-4">
+                  Failed to load Stripe payment system. This could be due to:
+                </p>
+                <ul className="text-red-600 text-sm space-y-1 mb-4">
+                  <li>• Backend not returning Stripe publishable key</li>
+                  <li>• Invalid Stripe configuration</li>
+                  <li>• Network connectivity issues</li>
+                </ul>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                  Retry Payment System
+                </button>
+              </div>
             )}
           </div>
 

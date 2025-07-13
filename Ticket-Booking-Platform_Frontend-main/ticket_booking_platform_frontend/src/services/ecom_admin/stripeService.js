@@ -19,7 +19,7 @@ export const stripeService = {
   // Get Stripe configuration (publishable key)
   async getStripeConfig() {
     try {
-      console.log('🔑 Getting Stripe configuration...');
+      console.log('🔑 Getting Stripe configuration from backend...');
       
       const response = await fetch(`${API_BASE_URL}/payments/config`, {
         method: 'GET',
@@ -27,18 +27,25 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.warn(`⚠️ Backend config failed with status: ${response.status}`);
+        const errorText = await response.text();
+        console.warn('Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('✅ Stripe config received');
+      console.log('✅ Stripe config received from backend:', result);
       
-      return { 
-        success: true, 
-        publishableKey: result.data.publishableKey 
-      };
+      if (result.success && result.data && result.data.publishableKey) {
+        return { 
+          success: true, 
+          publishableKey: result.data.publishableKey 
+        };
+      } else {
+        throw new Error('Invalid response format: missing publishableKey');
+      }
     } catch (error) {
-      console.error('❌ Error getting Stripe config:', error);
+      console.error('❌ Error getting Stripe config from backend:', error);
       return { 
         success: false, 
         error: error.message 
