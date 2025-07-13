@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CartSlider from "./components/ecom_Components/cart/CartSlider";
 import { CartProvider } from "./contexts/CartContext";
 import CheckoutPage from "./pages/Ecom_Pages/CheckoutPage"; // This is for the e-commerce shop
+import OrderConfirmation from "./pages/Ecom_Pages/OrderConfirmation"; // Order confirmation page
 import EventDetail from "./components/EventDetail";
 import EventCheckout from "./pages/EventCheckout"; // New Event Checkout Page
 import BookingConfirmation from "./pages/BookingConfirmation"; // New Booking Confirmation Page
@@ -50,6 +51,7 @@ const App = () => {
             <Route path="/shop" element={<Shop />} />
             <Route path="/product/:id" element={<ProductPage />} />
             <Route path="/checkout" element={<CheckoutPage />} /> {/* E-commerce checkout */}
+            <Route path="/order-confirmation/:orderId?" element={<OrderConfirmation />} /> {/* Order confirmation */}
             <Route path="/checkout/event" element={<EventCheckout />} /> {/* Event ticket checkout */}
             <Route path="/booking-confirmation" element={<BookingConfirmation />} /> {/* Booking Confirmation page */}
 

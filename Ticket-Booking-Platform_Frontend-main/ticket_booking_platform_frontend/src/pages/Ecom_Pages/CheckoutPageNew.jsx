@@ -43,7 +43,7 @@ const cardElementOptions = {
 };
 
 // Payment Form Component (inside Stripe Elements)
-const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onValidateForm }) => {
+const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -51,29 +51,8 @@ const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onVali
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
-    console.log('🔘 Complete Order button clicked!');
-    
     if (!stripe || !elements) {
-      console.log('❌ Stripe not loaded:', { stripe: !!stripe, elements: !!elements });
       toast.error('Stripe is not loaded yet. Please try again.');
-      return;
-    }
-
-    // Validate customer information first
-    const validationResult = await onValidateForm();
-    if (!validationResult.isValid) {
-      toast.error('Please fill in all required fields in the shipping information.', {
-        position: "top-center",
-        autoClose: 4000
-      });
-      
-      // Scroll to the first error field
-      const firstErrorField = document.querySelector('.border-red-500');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        firstErrorField.focus();
-      }
-      
       return;
     }
 
@@ -96,7 +75,7 @@ const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onVali
           size: item.size,
           color: item.colors?.[0] || null
         })),
-        customerInfo: validationResult.data, // Use validated data
+        customerInfo,
         shipping,
         tax
       };
@@ -116,15 +95,15 @@ const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onVali
         payment_method: {
           card: cardElement,
           billing_details: {
-            name: `${validationResult.data.firstName} ${validationResult.data.lastName}`,
-            email: validationResult.data.email,
-            phone: validationResult.data.phone,
+            name: `${customerInfo.firstName} ${customerInfo.lastName}`,
+            email: customerInfo.email,
+            phone: customerInfo.phone,
             address: {
-              line1: validationResult.data.address,
-              city: validationResult.data.city,
-              state: validationResult.data.state,
-              postal_code: validationResult.data.postalCode,
-              country: validationResult.data.country
+              line1: customerInfo.address,
+              city: customerInfo.city,
+              state: customerInfo.state,
+              postal_code: customerInfo.postalCode,
+              country: customerInfo.country
             }
           }
         }
@@ -155,7 +134,7 @@ const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onVali
       // Clear cart and redirect
       clearCart();
       
-      // Redirect to order confirmation page
+      // Redirect to order confirmation page (you may need to create this)
       navigate(`/order-confirmation/${confirmResult.data.orderId}`, {
         state: { orderDetails: confirmResult.data }
       });
@@ -229,25 +208,10 @@ const CheckoutPage = () => {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
-    trigger
+    getValues
   } = useForm({
     resolver: zodResolver(checkoutSchema)
   });
-
-  // Function to validate form and return data
-  const validateForm = async () => {
-    const isValid = await trigger(); // Triggers validation for all fields
-    const data = getValues();
-    
-    console.log('Form validation result:', { isValid, data, errors });
-    
-    return {
-      isValid,
-      data,
-      errors
-    };
-  };
 
   // Initialize Stripe
   useEffect(() => {
@@ -451,7 +415,6 @@ const CheckoutPage = () => {
                   cartTotal={cartTotal}
                   shipping={shipping}
                   tax={tax}
-                  onValidateForm={validateForm}
                 />
               </Elements>
             )}

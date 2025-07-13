@@ -60,85 +60,79 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-      <Link to={`/product/${product.id}`} className="block group">
-        <div className="aspect-square overflow-hidden bg-gray-100">
+    <div className="group bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <Link to={`/product/${product.id}`} className="block">
+        <div className="aspect-square overflow-hidden bg-gray-50">
           <img 
             src={getProductImage(product.image)} 
             alt={product.name}
-            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
         </div>
       </Link>
 
-      <div className="p-4">
-        <h3 className="text-lg font-medium text-gray-900 mb-1 line-clamp-1">
-          {product.name}
-        </h3>
-        
-        {/* Stock Indicator */}
+      <div className="p-5">
         <div className="mb-3">
-          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-            product.quantity > 10 
-              ? 'bg-green-100 text-green-800' 
-              : product.quantity > 5 
-              ? 'bg-yellow-100 text-yellow-800' 
-              : product.quantity > 0 
-              ? 'bg-red-100 text-red-800' 
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            <div className={`w-2 h-2 rounded-full mr-1 ${
-              product.quantity > 10 
-                ? 'bg-green-400' 
-                : product.quantity > 5 
-                ? 'bg-yellow-400' 
-                : product.quantity > 0 
-                ? 'bg-red-400' 
-                : 'bg-gray-400'
-            }`}></div>
-            {product.quantity > 0 ? `${product.quantity} left` : 'Out of stock'}
+          <h3 className="font-medium text-gray-900 mb-1 line-clamp-1">
+            {product.name}
+          </h3>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-semibold text-gray-900">
+              ${product.price.toFixed(2)}
+            </span>
+            
+            {/* Compact Stock Indicator */}
+            <div className="flex items-center space-x-1">
+              <div className={`w-2 h-2 rounded-full ${
+                product.quantity > 10 ? 'bg-green-500' 
+                : product.quantity > 5 ? 'bg-yellow-500' 
+                : product.quantity > 0 ? 'bg-orange-500' 
+                : 'bg-red-500'
+              }`}></div>
+              <span className="text-xs text-gray-500">
+                {product.quantity > 0 ? `${product.quantity}` : '0'}
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="mb-3">
-          <span className="text-sm text-gray-500">Size:</span>
-          <div className="flex space-x-2 mt-1">
-            {product.sizes?.map((size) => (
+        {/* Size Selection */}
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-1.5">
+            {product.sizes?.slice(0, 4).map((size) => (
               <button
                 key={size}
                 onClick={() => setSelectedSize(size)}
-                className={`px-3 py-1 text-sm border rounded-md ${
+                className={`w-8 h-8 text-xs border rounded-lg transition-all ${
                   selectedSize === size 
-                    ? 'bg-black text-white border-black' 
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                    ? 'border-gray-900 bg-gray-900 text-white' 
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
                 {size}
               </button>
             ))}
+            {product.sizes?.length > 4 && (
+              <span className="w-8 h-8 text-xs text-gray-400 flex items-center justify-center">
+                +{product.sizes.length - 4}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-3">
-          <div>
-            <span className="text-lg font-bold text-gray-900">
-              ${product.price.toFixed(2)}
-            </span>
-          </div>
-          
-          <button 
-            onClick={handleAddToCart}
-            disabled={product.quantity <= 0}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-              product.quantity <= 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-black text-white hover:bg-gray-800'
-            }`}
-          >
-            {product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
-          </button>
-        </div>
+        {/* Add to Cart Button */}
+        <button 
+          onClick={handleAddToCart}
+          disabled={product.quantity <= 0}
+          className={`w-full h-10 text-sm font-medium rounded-lg transition-all ${
+            product.quantity <= 0
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-900 text-white hover:bg-gray-800 active:scale-95'
+          }`}
+        >
+          {product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
+        </button>
       </div>
     </div>
   );
