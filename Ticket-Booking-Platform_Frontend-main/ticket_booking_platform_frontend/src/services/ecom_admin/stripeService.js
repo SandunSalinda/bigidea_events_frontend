@@ -88,7 +88,7 @@ export const stripeService = {
   async createPaymentIntent(paymentData) {
     try {
       console.log('💳 Creating payment intent...');
-      console.log('Payment data:', paymentData);
+      console.log('📤 Request data:', paymentData);
       
       const response = await fetch(`${API_BASE_URL}/payments/create-payment-intent`, {
         method: 'POST',
@@ -96,17 +96,35 @@ export const stripeService = {
         body: JSON.stringify(paymentData)
       });
 
+      console.log('📥 Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorData = await response.text();
+        console.error('❌ Response error:', errorData);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorData}`);
       }
 
       const result = await response.json();
-      console.log('✅ Payment intent created:', result);
+      console.log('📋 Full backend response:', result);
+      
+      // Handle different possible response structures
+      let responseData;
+      if (result.success && result.data) {
+        responseData = result.data;
+      } else if (result.clientSecret || result.client_secret) {
+        // Direct response format
+        responseData = result;
+      } else {
+        console.error('❌ Unexpected response format:', result);
+        throw new Error('Invalid payment intent response format');
+      }
+      
+      console.log('✅ Payment intent created successfully');
+      console.log('📋 Extracted data:', responseData);
       
       return { 
         success: true, 
-        data: result.data 
+        data: responseData 
       };
     } catch (error) {
       console.error('❌ Error creating payment intent:', error);

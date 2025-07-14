@@ -60,12 +60,15 @@ const OrderConfirmation = () => {
       <div className="max-w-4xl mx-auto px-4 py-8 pt-24">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircleIcon className="w-12 h-12 text-green-600" />
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <CheckCircleIcon className="w-16 h-16 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
-          <p className="text-gray-600">
-            Thank you for your purchase. Your order has been successfully processed.
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">🎉 Order Confirmed!</h1>
+          <p className="text-xl text-gray-600 mb-2">
+            Thank you for your purchase! Your order has been successfully processed.
+          </p>
+          <p className="text-lg text-green-600 font-medium">
+            ✅ Payment completed • 📦 Order confirmed • 🚚 Processing started
           </p>
         </div>
 
@@ -113,42 +116,62 @@ const OrderConfirmation = () => {
         </div>
 
         {/* What's Next */}
-        <div className="bg-blue-50 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">What's Next?</h3>
-          <div className="space-y-2 text-blue-800">
-            <div className="flex items-start space-x-2">
-              <span className="text-blue-600 mt-1">📧</span>
-              <span>You'll receive an order confirmation email shortly</span>
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 mb-6 border border-blue-100">
+          <h3 className="text-2xl font-bold text-blue-900 mb-6 text-center">📋 What happens next?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm">
+              <span className="text-3xl">📧</span>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Email Confirmation</h4>
+                <p className="text-gray-600 text-sm">You'll receive an order confirmation email shortly with all the details</p>
+              </div>
             </div>
-            <div className="flex items-start space-x-2">
-              <span className="text-blue-600 mt-1">📦</span>
-              <span>Your order will be processed and shipped within 1-2 business days</span>
+            <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm">
+              <span className="text-3xl">📦</span>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Order Processing</h4>
+                <p className="text-gray-600 text-sm">Your order will be processed and packaged within 1-2 business days</p>
+              </div>
             </div>
-            <div className="flex items-start space-x-2">
-              <span className="text-blue-600 mt-1">🚚</span>
-              <span>You'll receive tracking information once your order ships</span>
+            <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm">
+              <span className="text-3xl">🚚</span>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Shipping Updates</h4>
+                <p className="text-gray-600 text-sm">You'll receive tracking information once your order ships</p>
+              </div>
             </div>
-            <div className="flex items-start space-x-2">
-              <span className="text-blue-600 mt-1">📞</span>
-              <span>Contact support if you have any questions about your order</span>
+            <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm">
+              <span className="text-3xl">💬</span>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Customer Support</h4>
+                <p className="text-gray-600 text-sm">Contact us anytime if you have questions about your order</p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/shop"
-            className="bg-gray-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center"
-          >
-            Continue Shopping
-          </Link>
-          <Link
-            to="/"
-            className="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center"
-          >
-            Back to Home
-          </Link>
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-8 mb-8">
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-6">What would you like to do next?</h3>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Link
+              to="/shop"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
+              <span>🛍️</span>
+              <span>Continue Shopping</span>
+            </Link>
+            <Link
+              to="/"
+              className="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-10 py-4 rounded-xl font-semibold hover:from-gray-800 hover:to-gray-900 transition-all duration-300 text-center shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
+              <span>🏠</span>
+              <span>Back to Home</span>
+            </Link>
+          </div>
+          <p className="text-center text-gray-600 mt-4 text-sm">
+            Take your time to review your order details above. No rush! 😊
+          </p>
         </div>
 
         {/* Support Info */}
