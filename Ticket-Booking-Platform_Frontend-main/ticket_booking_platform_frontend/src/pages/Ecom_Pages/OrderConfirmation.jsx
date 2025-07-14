@@ -84,36 +84,126 @@ const OrderConfirmation = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date:</span>
-                  <span className="font-medium">{new Date().toLocaleDateString()}</span>
+                  <span className="font-medium">{orderDetails?.orderDate ? new Date(orderDetails.orderDate).toLocaleDateString() : new Date().toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
-                  <span className="text-green-600 font-medium">Confirmed</span>
+                  <span className="text-green-600 font-medium">{orderDetails?.status || 'Confirmed'}</span>
                 </div>
               </div>
             </div>
 
-            {orderDetails && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Payment Information</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Method:</span>
-                    <span className="font-medium">Credit Card</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-medium">${orderDetails.total?.toFixed(2) || '0.00'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Status:</span>
-                    <span className="text-green-600 font-medium">Paid</span>
-                  </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Payment Information</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Payment Method:</span>
+                  <span className="font-medium">{orderDetails?.paymentMethod || 'Credit Card'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="font-medium">${orderDetails?.total?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Payment Status:</span>
+                  <span className="text-green-600 font-medium">Paid</span>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
+
+        {/* Order Items Summary */}
+        {orderDetails?.items && orderDetails.items.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">📦 Items Purchased</h3>
+            <div className="space-y-4">
+              {orderDetails.items.map((item, index) => (
+                <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                    {item.image ? (
+                      <img
+                        src={item.image.startsWith('http') ? item.image : `/images/products/${item.image}`}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = '/images/products/default.jpg';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                        <span className="text-gray-500 text-xs">No Image</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 truncate">{item.name}</h4>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mt-1">
+                      {item.size && <span>Size: <span className="font-medium">{item.size}</span></span>}
+                      {item.colors && item.colors.length > 0 && (
+                        <span>Color: <span className="font-medium">{item.colors[0]}</span></span>
+                      )}
+                      <span>Qty: <span className="font-medium">{item.quantity}</span></span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</div>
+                    <div className="text-sm text-gray-500">${item.price.toFixed(2)} each</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Order Totals */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">${orderDetails.subtotal?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Shipping:</span>
+                  <span className="font-medium">
+                    {(orderDetails.shipping || 0) === 0 ? 'Free' : `$${orderDetails.shipping?.toFixed(2)}`}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tax:</span>
+                  <span className="font-medium">${orderDetails.tax?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
+                  <span>Total:</span>
+                  <span className="text-green-600">${orderDetails.total?.toFixed(2) || '0.00'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Customer Information */}
+        {orderDetails?.customerInfo && (
+          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">📋 Shipping Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Customer Details</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p><span className="font-medium">Name:</span> {orderDetails.customerInfo.firstName} {orderDetails.customerInfo.lastName}</p>
+                  <p><span className="font-medium">Email:</span> {orderDetails.customerInfo.email}</p>
+                  <p><span className="font-medium">Phone:</span> {orderDetails.customerInfo.phone}</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Delivery Address</h4>
+                <div className="text-sm text-gray-600">
+                  <p>{orderDetails.customerInfo.address}</p>
+                  <p>{orderDetails.customerInfo.city}, {orderDetails.customerInfo.state} {orderDetails.customerInfo.postalCode}</p>
+                  <p>{orderDetails.customerInfo.country}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* What's Next */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 mb-6 border border-blue-100">

@@ -204,9 +204,24 @@ const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onVali
         // Create a fallback order ID if backend didn't provide one
         const orderId = confirmResult.success ? confirmResult.data?.orderId : `order_${Date.now()}`;
         
+        // Prepare complete order details for confirmation page
+        const completeOrderDetails = {
+          orderId,
+          items: cartItems,
+          customerInfo: validationResult.data,
+          subtotal: cartTotal,
+          shipping,
+          tax,
+          total: cartTotal + shipping + tax,
+          paymentMethod: 'Credit Card',
+          status: 'Confirmed',
+          orderDate: new Date().toISOString(),
+          backendData: confirmResult.success ? confirmResult.data : null
+        };
+        
         // Redirect to order confirmation page
         navigate(`/order-confirmation/${orderId}`, {
-          state: { orderDetails: confirmResult.success ? confirmResult.data : null }
+          state: { orderDetails: completeOrderDetails }
         });
         
       } catch (error) {
@@ -222,9 +237,24 @@ const PaymentForm = ({ customerInfo, cartItems, cartTotal, shipping, tax, onVali
         // Clear cart and redirect
         clearCart();
         
+        // Prepare complete order details for confirmation page (fallback case)
+        const completeOrderDetails = {
+          orderId: `order_${Date.now()}`,
+          items: cartItems,
+          customerInfo: validationResult.data,
+          subtotal: cartTotal,
+          shipping,
+          tax,
+          total: cartTotal + shipping + tax,
+          paymentMethod: 'Credit Card',
+          status: 'Confirmed',
+          orderDate: new Date().toISOString(),
+          backendData: null
+        };
+        
         // Redirect to order confirmation page with fallback ID
         navigate(`/order-confirmation/order_${Date.now()}`, {
-          state: { orderDetails: null }
+          state: { orderDetails: completeOrderDetails }
         });
       }
 
